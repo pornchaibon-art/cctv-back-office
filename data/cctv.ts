@@ -1,4 +1,4 @@
-export const cctv = 
+export const cctv: cctvType[] =
 [
   {
     id: 1,
@@ -72,7 +72,7 @@ export const cctv =
     branch: "สาขาอโศก",
     status: "online"
   }
-] 
+]
 
 export type cctvType = {
     id : number

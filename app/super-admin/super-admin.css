@@ -1,0 +1,193 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap");
+
+/* CSS เดิมของ cctv-backoffice (super admin) — ครอบด้วย .sa-scope (ดู app/super-admin/layout.tsx) */
+.sa-scope {
+
+& {
+  --bg: #14102e;
+  --panel: #1d1845;
+  --panel2: #251f55;
+  --border: #2f2868;
+  --text: #ece9ff;
+  --muted: #9a94c9;
+  --green: #5ee6a8;
+  --cyan: #4fd8e8;
+  --yellow: #f5c84c;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+& {
+  font-family: "Noto Sans Thai", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button { font-family: inherit; }
+
+.app { display: flex; min-height: 100vh; }
+
+.main {
+  flex: 1;
+  padding: 28px 32px;
+}
+
+
+.sidebar {
+  width: 240px;
+  background: #100c26;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 14px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+.brand-title { font-weight: 700; font-size: 16px; }
+.badge-super {
+  align-self: flex-start;
+  margin: 12px 0 20px;
+  font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 6px;
+  background: var(--green); color: #0b2a1c;
+}
+.nav a {
+  display: flex; gap: 10px; align-items: center;
+  padding: 10px 12px; margin-bottom: 4px;
+  border-radius: 10px;
+  color: var(--muted); text-decoration: none; font-size: 14px;
+}
+.nav a:hover { background: var(--panel); }
+.nav a.active { background: var(--panel2); color: var(--text); }
+
+.user-card {
+  margin-top: auto;
+  padding: 12px; border-radius: 12px; background: var(--panel);
+}
+
+
+.header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 24px;
+}
+.header h1 { font-size: 28px; }
+.header p { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.search {
+  width: 260px; padding: 9px 14px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+  color: var(--text); font-family: inherit;
+}
+
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+}
+.small { font-size: 12px; color: var(--muted); }
+.center { text-align: center; }
+
+.btn { border: none; border-radius: 10px; padding: 10px 18px; font-weight: 600; cursor: pointer; }
+.btn-green { background: var(--green); color: #0b2a1c; }
+.btn-ghost { background: transparent; color: var(--text); }
+
+.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.footer-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+
+
+.tabs {
+  display: inline-flex; gap: 4px; padding: 4px;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 999px;
+}
+.tab {
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); padding: 6px 14px; border-radius: 999px; font-size: 13px;
+}
+.tab.active { background: #fff; color: #14102e; font-weight: 600; }
+
+
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left; font-size: 12px; font-weight: 500; color: var(--muted);
+  padding: 10px 12px; border-bottom: 1px solid var(--border);
+}
+td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+tr:last-child td { border-bottom: none; }
+
+
+.role-select {
+  width: 150px; padding: 6px 10px;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  font-family: inherit; font-weight: 600; cursor: pointer;
+}
+.role-select option { color: var(--text); background: var(--bg); }
+.role-super { color: var(--green); }
+.role-admin { color: var(--cyan); }
+.role-customer { color: var(--yellow); }
+
+.pill { display: inline-block; padding: 4px 14px; border-radius: 999px; font-size: 11px; font-weight: 700; color: #14102e; }
+.pill-super { background: var(--green); }
+.pill-admin { background: var(--cyan); }
+.pill-customer { background: var(--yellow); }
+
+
+.toggle {
+  width: 40px; height: 22px; border-radius: 999px;
+  background: #3a3470; border: none; position: relative; cursor: pointer;
+}
+.toggle span {
+  position: absolute; top: 3px; left: 3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; transition: left 0.2s;
+}
+.toggle.on { background: var(--green); }
+.toggle.on span { left: 21px; }
+
+.history-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px; margin-bottom: 10px;
+  border-radius: 12px; background: var(--panel2);
+}
+.history-item:last-child { margin-bottom: 0; }
+.history-time { margin-left: auto; font-size: 12px; color: var(--muted); }
+
+/* ---------- Forwarded ---------- */
+.grid-2 { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; align-items: start; }
+.label { font-size: 13px; color: var(--muted); margin: 18px 0 8px; }
+.chips { display: flex; gap: 8px; }
+.chip {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  padding: 6px 14px; border-radius: 999px; cursor: pointer;
+}
+.chip.active { background: var(--green); border-color: var(--green); color: #0b2a1c; }
+textarea {
+  width: 100%; min-height: 120px; padding: 14px;
+  background: var(--bg); color: var(--text);
+  border: 1px solid var(--green); border-radius: 12px;
+  font-family: inherit; font-size: 14px; resize: vertical;
+}
+.ticket {
+  padding: 12px; margin-bottom: 10px; cursor: pointer;
+  border-radius: 12px; background: var(--panel2); border: 1px solid transparent;
+}
+.ticket.active { border-color: var(--green); }
+.status { font-size: 11px; padding: 2px 8px; border-radius: 6px; }
+.status-doing { background: #14532d; color: var(--green); }
+.status-wait { background: #3a3470; color: #c4b5fd; }
+.status-done { background: #164e63; color: var(--cyan); }
+.note { background: #0f2a3a; border-radius: 10px; padding: 10px; font-size: 12px; margin-top: 8px; }
+
+
+.add-form { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.add-form input,
+.add-form select {
+  flex: 1; min-width: 140px; padding: 9px 12px;
+  background: var(--bg); color: var(--text);
+  border: 1px solid var(--border); border-radius: 10px;
+  font-family: inherit;
+}
+.success { color: var(--green); font-size: 13px; }
+
+}

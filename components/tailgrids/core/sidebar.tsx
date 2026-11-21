@@ -116,8 +116,9 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="w-64 bg-[#110d2e] text-white border-r border-white/10
-    p-4 flex flex-col justify-between shrink-0"
+      className="sticky top-0 h-screen w-60 shrink-0 border-r border-white/8
+      bg-[linear-gradient(180deg,#17113f_0%,#100d32_100%)] p-4
+      flex flex-col justify-between text-white shadow-[12px_0_40px_rgba(5,3,24,0.14)]"
     >
       {/* menu */}
       <div>

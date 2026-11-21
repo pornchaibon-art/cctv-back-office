@@ -7,15 +7,14 @@ import Footer from "./components/Footer";
 
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
-    <>
-      <div className="flex min-h-screen">
-        <Sidebar />
-        <main className="flex-1 min-w-0 p-6">
+    <div className="flex min-h-screen bg-[#0b0826] text-white">
+      <Sidebar />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <main className="min-h-screen flex-1 p-6 lg:p-8">
           {children}
         </main>
+        <Footer />
       </div>
-
-      <Footer />
-    </>
+    </div>
   );
 }

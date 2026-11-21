@@ -1,69 +1,46 @@
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg("");
-    setIsLoading(true);
+  const enterAs = (role: "CUSTOMER" | "ADMIN" | "SUPER ADMIN") => {
+    if (role === "ADMIN") {
+      localStorage.setItem(
+        "cctv_user",
+        JSON.stringify({
+          role: "ADMIN",
+          name: "Thanut",
+          initials: "TH",
+        }),
+      );
+      router.push("/admin");
+      return;
+    }
 
-    const userEmail = email.toLowerCase().trim();
+    if (role === "SUPER ADMIN") {
+      localStorage.setItem(
+        "cctv_user",
+        JSON.stringify({
+          role: "SUPER ADMIN",
+          name: "Ryu Admin",
+          initials: "RY",
+        }),
+      );
+      router.push("/super-admin");
+      return;
+    }
 
-    setTimeout(() => {
-      if (userEmail.endsWith("@admin.com") || userEmail.endsWith("@admin")) {
-        localStorage.setItem(
-          "cctv_user",
-          JSON.stringify({
-            role: "ADMIN",
-            name: "Thanut",
-            initials: "TH",
-          }),
-        );
-        // @admin -> admin
-        router.push("/admin");
-      } else if (
-        userEmail.endsWith("@superadmin.com") ||
-        userEmail.endsWith("@superadmin")
-      ) {
-        localStorage.setItem(
-          "cctv_user",
-          JSON.stringify({
-            role: "SUPER ADMIN",
-            name: "Ryu Admin",
-            initials: "RY",
-          }),
-        );
-        // @superadmin -> super-admin
-        router.push("/super-admin");
-      } else if (
-        userEmail.endsWith("@customer.com") ||
-        userEmail.endsWith("@customer")
-      ) {
-        localStorage.setItem(
-          "cctv_user",
-          JSON.stringify({
-            role: "CUSTOMER",
-            name: "Chira",
-            initials: "CH",
-          }),
-        );
-        // @customer -> customer
-        router.push("/customer");
-      } else {
-        // กรณีใส่อีเมลอื่นๆ
-        setIsLoading(false);
-        setErrorMsg("ไม่พบบัญชีผู้ใช้ในระบบ กรุณาตรวจสอบอีเมลอีกครั้ง");
-      }
-    }, 1000);
+    localStorage.setItem(
+      "cctv_user",
+      JSON.stringify({
+        role: "CUSTOMER",
+        name: "Chira",
+        initials: "CH",
+      }),
+    );
+    router.push("/customer");
   };
 
   return (
@@ -110,57 +87,34 @@ export default function LoginPage() {
           <div className="flex justify-center mb-6">
             <div className="inline-flex rounded-full bg-[#120e33] p-1 border border-white/5">
               <div className="px-6 py-2 rounded-full bg-white text-[#120d3a] text-s font-bold shadow">
-                กรุณากรอกอีเมล
+                เลือกบทบาทเพื่อเข้าใช้งาน
               </div>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="อีเมล"
-                required
-                className="w-full rounded-xl bg-[#141038] border border-white/10 px-4 py-3 text-sm placeholder-indigo-300/40"
-              />
-            </div>
-
-            <div>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="รหัสผ่าน"
-                required
-                className="w-full rounded-xl bg-[#141038] border border-white/10 px-4 py-3 text-sm
-                   placeholder-indigo-300/40 "
-              />
-            </div>
-
-            {errorMsg && (
-              <div className="rounded-xl bg-rose-500/15 border border-rose-500/30 px-4 py-2.5 text-xs font-medium text-rose-300 text-center">
-                {errorMsg}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full rounded-full bg-[#72f1b8]  text-black font-bold text-sm py-3.5 mt-3 mb-7"
-            >
-              {isLoading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
-            </button>
-          </form>
-
-          <div className="mt-3 flex flex-col items-center justify-center gap-3 text-xs">
-            <Link
-              href="/forget-pass"
-              className="text-indigo-300/60 hover:text-indigo-200 transition-colors"
-            >
-              ลืมรหัสผ่าน?
-            </Link>
+          <div className="space-y-3">
+            {(
+              [
+                ["CUSTOMER", "Customer", "ลูกค้า"],
+                ["ADMIN", "Admin", "ผู้ดูแล"],
+                ["SUPER ADMIN", "Super Admin", "ผู้ดูแลระบบ"],
+              ] as const
+            ).map(([role, label, description]) => (
+              <button
+                key={role}
+                type="button"
+                onClick={() => enterAs(role)}
+                className="w-full rounded-2xl border border-white/10 bg-[#141038] px-5 py-4 text-left transition-all hover:border-[#72f1b8]/60 hover:bg-[#1b1750]"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-base font-bold text-white">{label}</p>
+                    <p className="mt-1 text-xs text-indigo-200/60">{description}</p>
+                  </div>
+                  <span className="text-xl text-[#72f1b8]">→</span>
+                </div>
+              </button>
+            ))}
           </div>
         </div>
       </div>

@@ -16,16 +16,16 @@ export default function PboLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
 
   return (
-    <div className="flex min-h-screen bg-[#161142] text-white">
+    <div className="flex min-h-screen bg-[#0b0826] text-white">
       <Sidebar />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center gap-4 border-b border-base-200 bg-background-100 px-6">
-          <p className="text-lg font-semibold">{titles[pathname] ?? ""}</p>
+        <header className="sticky top-0 z-20 flex h-16 items-center border-b border-white/8 bg-[#100d32]/85 px-6 backdrop-blur-xl lg:px-8">
+          <p className="text-lg font-bold">{titles[pathname] ?? ""}</p>
         </header>
 
         {/* เนื้อหาของแต่ละหน้า */}
-        <main className="flex-1 overflow-auto p-6 bg-background-50">
+        <main className="flex-1 overflow-auto p-6 lg:p-8">
           {children}
         </main>
       </div>

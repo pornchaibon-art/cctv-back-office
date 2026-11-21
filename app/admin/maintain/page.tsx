@@ -47,7 +47,7 @@ export default function Page() {
   return (
     <div>
       <div>
-        <main className="flex-1 min-w-0 p-6 bg-[#211778] border w-full">
+        <div className="min-w-0 w-full">
           <div className="flex items-center justify-between gap-4">
             <h1
               className={`${kanit.className} text-2xl font-medium text-white`}
@@ -227,7 +227,7 @@ export default function Page() {
               </TableBody>
             </TableRoot>
           </div>
-        </main>
+        </div>
       </div>
     </div>
   );

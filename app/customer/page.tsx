@@ -66,11 +66,11 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="flex min-h-screen bg-[#161142] text-white">
+    <div className="flex min-h-screen bg-[#0b0826] text-white">
       <Sidebar />
 
       {/* ขวา: main */}
-      <main className="flex-1 p-8">
+      <main className="min-w-0 flex-1 p-6 lg:p-8">
 
         {/* header */}
         <header className="flex items-center justify-between mb-8">

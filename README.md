@@ -8,7 +8,7 @@ npm run dev
 ```
 
 เปิด http://localhost:3000 → หน้าเข้าสู่ระบบ
-อีเมลลงท้าย `@customer` → `/customer`, `@admin` → `/admin`, `@superadmin` → `/super-admin`
+กดเลือกบทบาท Customer, Admin หรือ Super Admin บนหน้าล็อกอินเพื่อเข้าใช้งานแต่ละหน้าทันที โดยไม่ต้องกรอกอีเมลหรือรหัสผ่าน
 
 ## เส้นทางหน้า (route)
 

@@ -1,5 +1,8 @@
 "use client";
 
+import Image from "next/image";
+import { BRANCH_LABEL } from "@/lib/cameras";
+import { useCameras } from "@/lib/useCameras";
 import React, { useState } from "react";
 import Link from "next/link";
 import { Search, Maximize2, PersonStanding } from "lucide-react";
@@ -19,10 +22,8 @@ const stats = [
   { label: "แจ้งเหตุวันนี้", value: "3", icon: Bell },
 ];
 
-const pinnedCameras = [
-  { name: "หน้าร้าน - ประตูหลัก", branch: "สาขาบางนา", time: "14:32:08" },
-  { name: "ลานจอดรถ", branch: "สาขาบางนา", time: "14:32:08" },
-];
+
+
 
 const recentAlerts = [
   {
@@ -53,16 +54,30 @@ const recentAlerts = [
 
 export default function DashboardPage() {
   const [searchText, setSearchText] = useState("");
+
+  // ดึงข้อมูลกล้องจาก Local Storage
+  const cameras = useCameras();
+
+  // เลือกกล้องที่ Pin ไว้ 2 ตัว
+  const pinnedCameras = cameras.filter(
+    (cam) => ["cam-01", "cam-02"].includes(cam.id)
+  );
+
+  // ค้นหากล้อง
   const filteredCameras = pinnedCameras.filter(
     (cam) =>
       cam.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      cam.branch.toLowerCase().includes(searchText.toLowerCase()),
+      BRANCH_LABEL[cam.branch]
+        .toLowerCase()
+        .includes(searchText.toLowerCase())
   );
 
+
+  // ค้นหาการแจ้งเตือน
   const filteredAlerts = recentAlerts.filter(
     (alert) =>
       alert.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      alert.location.toLowerCase().includes(searchText.toLowerCase()),
+      alert.location.toLowerCase().includes(searchText.toLowerCase())
   );
 
   return (
@@ -137,44 +152,56 @@ export default function DashboardPage() {
                     key={cam.name}
                     className="rounded-2xl bg-[#151138] border border-white/10 overflow-hidden"
                   >
-                    <div
-                      className="h-44 bg-linear-to-br from-[#1b164a] via-[#130f36] to-[#24295e] 
-                  p-3.5 flex flex-col justify-between"
-                    >
-                      <div className="flex items-center justify-between">
+                    <div className="relative h-44 overflow-hidden bg-black">
+                      {cam.status === "online" ? (
+                        <Image
+                          src={cam.snapshot}
+                          alt={cam.name}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-gray-400">
+                          กล้องออฟไลน์
+                        </div>
+                      )}
+
+                      <div className="absolute inset-0 bg-black/10" />
+
+                      <div className="absolute top-3 left-3">
                         <span
-                          className="inline-flex items-center gap-1.5 rounded-full bg-rose-500
-                      px-2.5 py-0.5 text-[10px] font-bold"
+                          className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${cam.status === "online"
+                            ? "bg-green-500 text-white"
+                            : "bg-red-500 text-white"
+                            }`}
                         >
-                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                          LIVE
-                        </span>
-                        <span className="text-xs font-mono text-white/70">
-                          {cam.time}
+                          {cam.status === "online" ? "LIVE" : "OFFLINE"}
                         </span>
                       </div>
 
-                      <div className="flex justify-end">
-                        <button className="p-1 rounded-lg bg-black/30 hover:bg-black/50 text-white/80 cursor-pointer">
+                      <div className="absolute bottom-3 right-3">
+                        <button className="p-1 rounded-lg bg-black/50 text-white">
                           <Maximize2 className="w-3 h-3" />
                         </button>
                       </div>
                     </div>
-
                     <div className="p-3 flex items-center justify-between bg-[#1b1647]">
                       <div>
                         <p className="text-xs font-bold">{cam.name}</p>
+
                         <p className="text-[11px] text-indigo-300/60 mt-0.5">
-                          {cam.branch}
+                          {BRANCH_LABEL[cam.branch]}
                         </p>
                       </div>
 
                       <span
-                        className="inline-flex items-center gap-1 rounded-full bg-[#153b3b] text-[#72f1b8]
-                    px-2 py-1 text-[11px] font-semibold"
+                        className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold ${cam.status === "online"
+                            ? "bg-[#153b3b] text-[#72f1b8]"
+                            : "bg-red-500/20 text-red-400"
+                          }`}
                       >
-                        <span className="w-1 h-1 rounded-full bg-[#72f1b8]" />
-                        ออนไลน์
+                        {cam.status === "online" ? "ออนไลน์" : "ออฟไลน์"}
                       </span>
                     </div>
                   </div>

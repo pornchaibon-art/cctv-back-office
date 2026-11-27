@@ -1,6 +1,14 @@
 'use client';
 
-import { useState } from "react";
+import {
+  getStatusColor,
+  getRequests,
+  subscribeRequests,
+  type Status,
+  type Request,
+  updateRequest,
+} from "@/data/comment";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/tailgrids/core/button";
 import { Input } from "@/components/tailgrids/core/input";
 import { Label } from "@/components/tailgrids/core/label";
@@ -16,7 +24,6 @@ import {
   TableRoot,
   TableRow
 } from "@/components/tailgrids/core/table";
-import { comments, Status, type Request, Topics } from "@/data/comments";
 import { Backdrop, OverlayWrapper } from "@/components/tailgrids/core/overlay";
 import { Dialog, DialogBody, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/tailgrids/core/dialog";
 import { Select, SelectContent, SelectIndicator, SelectItem, SelectTrigger } from "@/components/tailgrids/core/select";
@@ -30,30 +37,87 @@ const kanit = Kanit({
 
 
 export default function Page() {
-  const [reports, setReports] = useState<Request[]>(comments)
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [status, setStatus] = useState<Status>("รอดำเนินการ")
+  const [reports, setReports] = useState<Request[]>(getRequests());
 
-  const filteredReports = reports.filter((report) => {
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [status, setStatus] = useState<Status>("รอดำเนินการ");
+  const [reply, setReply] = useState("");
+
+  // ติดตามข้อมูลคำร้องกลาง
+  useEffect(() => {
+    return subscribeRequests(() => {
+      setReports([...getRequests()]);
+    });
+  }, []);
+
+  // แสดงเฉพาะคำร้องที่ส่งถึง Admin
+  const adminReports = reports.filter(
+    (report) => report.recipientRole === "Admin"
+  );
+
+  // Filter สถานะ
+  const filteredReports = adminReports.filter((report) => {
     if (activeFilter === "all") return true;
     return report.status === activeFilter;
   });
 
+  // สถานะที่ Admin สามารถเลือกได้
   const statusList: Status[] = [
     "รอดำเนินการ",
+    "กำลังตรวจสอบ",
     "กำลังดำเนินการ",
     "ดำเนินการแล้ว",
+    "ไม่อนุมัติ",
   ];
 
-  const handleSave = (id: number, newStatus: Status) => {
-    setReports((prev) =>
-      prev.map((report) =>
-        report.id === id
-          ? { ...report, status: newStatus }
-          : report
-      )
-    );
-  };
+  // บันทึกการตอบกลับโดย Admin จัดการเอง
+  function handleSave(report: Request) {
+    const newMessages = reply.trim()
+      ? [
+        ...(report.messages ?? []),
+        {
+          id: Date.now(),
+          senderId: "admin_01",
+          senderRole: "Admin" as const,
+          message: reply.trim(),
+          createdAt: new Date().toISOString(),
+        },
+      ]
+      : report.messages ?? [];
+
+    updateRequest(report.id, {
+      status,
+      forwardedTo: null,
+      forwardedBy: undefined,
+      messages: newMessages,
+    });
+
+    setReply("");
+  }
+
+  // ส่งต่อให้ Super Admin
+  function handleForward(report: Request) {
+    const newMessages = reply.trim()
+      ? [
+        ...report.messages,
+        {
+          id: Date.now(),
+          senderId: "admin_01",
+          senderRole: "Admin" as const,
+          message: reply.trim(),
+          createdAt: new Date().toISOString(),
+        },
+      ]
+      : report.messages;
+
+    updateRequest(report.id, {
+      status: "ส่งต่อถึง Super Admin",
+      forwardedTo: "Super Admin",
+      messages: newMessages,
+    });
+
+    setReply("");
+  }
 
 
   return (
@@ -96,27 +160,28 @@ export default function Page() {
 
                     {/* หัวข้อปัญหา */}
                     <TableCell>
-                      {report.title}
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium">
+                          {report.title}
+                        </span>
+
+                        <span className="text-xs text-white/50">
+                          จาก {report.senderName}
+                        </span>
+                      </div>
                     </TableCell>
 
                     {/* ประเภท */}
                     <TableCell>
                       <span className="rounded-full bg-violet-100 px-3 py-1 text-violet-700 text-sm">
-                        {report.topics}
+                        {report.topic}
                       </span>
                     </TableCell>
 
                     {/* สถานะ */}
                     <TableCell>
                       <span
-                        className={`rounded-full px-3 py-1 text-sm ${report.status === "รอดำเนินการ"
-                          ? "bg-yellow-500/20 text-yellow-400"
-                          : report.status === "กำลังดำเนินการ"
-                            ? "bg-blue-500/20 text-blue-400"
-                            : report.status === "ดำเนินการแล้ว"
-                              ? "bg-green-500/20 text-green-400"
-                              : "bg-purple-500/20 text-purple-400"
-                          }`}
+                        className={`rounded-full px-3 py-1 text-sm ${getStatusColor(report.status)}`}
                       >
                         {report.status}
                       </span>
@@ -131,7 +196,10 @@ export default function Page() {
                         <Button
                           appearance="outline"
                           size="sm"
-                          onClick={() => setStatus(report.status)}
+                          onClick={() => {
+                            setStatus(report.status);
+                            setReply("");
+                          }}
                         >
                           UPDATE
                         </Button>
@@ -180,7 +248,9 @@ export default function Page() {
                                   <Label>Reply</Label>
                                   <TextArea
                                     rows={3}
-                                    placeholder='ข้อความตอบกลับ'
+                                    value={reply}
+                                    onChange={(e) => setReply(e.target.value)}
+                                    placeholder="ข้อความตอบกลับ Manager"
                                     className="w-full"
                                   />
                                 </TextField>
@@ -191,12 +261,18 @@ export default function Page() {
                               <DialogClose
                                 variant="success"
                                 className="mr-25"
-                                onClick={() => handleSave(report.id, "ส่งต่อถึง Dev")}
+                                onClick={() => handleForward(report)}
                               >
-                                ส่งให้ SuperAdmin
+                                ส่งให้ Super Admin
                               </DialogClose>
-                              <DialogClose appearance="outline">Cancel</DialogClose>
-                              <DialogClose onClick={() => handleSave(report.id ,status)}>
+
+                              <DialogClose appearance="outline">
+                                Cancel
+                              </DialogClose>
+
+                              <DialogClose
+                                onClick={() => handleSave(report)}
+                              >
                                 Save Changes
                               </DialogClose>
                             </DialogFooter>

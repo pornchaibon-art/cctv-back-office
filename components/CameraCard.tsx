@@ -18,32 +18,41 @@ export default function CameraCard({ camera, time, branchLabel, onExpand }: Prop
   return (
     <article className="cam-card">
       <div className="cam-media">
-        {!imgFailed && (
-          <img
-            src={camera.snapshot}
-            alt={camera.name}
-            onError={() => setImgFailed(true)}
-          />
-        )}
-
-        <span className="live-badge">
-          <i />
-          LIVE
-        </span>
-        <span className="cam-time">{time}</span>
-
-        <button className="expand" aria-label="ขยายภาพ" type="button" onClick={onExpand}>
-          <Maximize2 size={14} />
-        </button>
+  {camera.status === 'online' && !imgFailed ? (
+    <img
+      src={camera.snapshot}
+      alt={camera.name}
+      onError={() => setImgFailed(true)}
+    />
+  ) : (
+    <div className="flex h-full w-full items-center justify-center bg-[#100D35]">
+      <div className="text-center">
+        <p className="text-red-400 font-medium">กล้องออฟไลน์</p>
+        <p className="text-sm text-gray-400">ไม่สามารถแสดงภาพได้</p>
       </div>
+    </div>
+  )}
 
-      <div className="cam-foot">
-        <div>
-          <div className="cam-name">{camera.name}</div>
-          <div className="cam-branch">{branchLabel}</div>
-        </div>
-        <span className="status">ออนไลน์</span>
-      </div>
+  {camera.status === 'online' && (
+    <>
+      <span className="live-badge">
+        <i />
+        LIVE
+      </span>
+
+      <span className="cam-time">{time}</span>
+
+      <button
+        className="expand"
+        aria-label="ขยายภาพ"
+        type="button"
+        onClick={onExpand}
+      >
+        <Maximize2 size={14} />
+      </button>
+    </>
+  )}
+</div>
     </article>
   );
 }

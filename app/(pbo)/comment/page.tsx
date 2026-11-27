@@ -2,20 +2,23 @@
 
 import { useState } from "react";
 import { ImagePlus, Plus, X } from "lucide-react";
-import { Badge } from "@/components/tailgrids/core/badge";
 import { Button } from "@/components/tailgrids/core/button";
 import { Card } from "@/components/tailgrids/core/card";
 import { TextArea } from "@/components/tailgrids/core/text-area";
 import { cn } from "@/utils/cn";
-import { recipients, topics, MAX_IMAGES, initialRequests, type Status } from "@/data/comment";
+import {
+  recipients,
+  topics,
+  MAX_IMAGES,
+  getStatusColor,
+  addRequest,
+  getRequests,
+  subscribeRequests,
+  type Request,
+} from "@/data/comment";
 
-// สีป้ายสถานะ
-const statusColor: Record<Status, "primary" | "warning" | "success" | "gray"> = {
-  "รอดำเนินการ": "primary",
-  "กำลังดำเนินการ": "warning",
-  "ดำเนินการแล้ว": "success",
-  "ส่งต่อถึง Dev": "gray",
-};
+import { useEffect } from "react";
+
 
 export default function Comment() {
   // State: ฟอร์ม
@@ -25,8 +28,13 @@ export default function Comment() {
   const [images, setImages] = useState<string[]>([]);
 
   // State: คำขอของฉัน
-  const [requests, setRequests] = useState(initialRequests);
+  const [requests, setRequests] = useState<Request[]>(getRequests());
 
+  useEffect(() => {
+    return subscribeRequests(() => {
+      setRequests([...getRequests()]);
+    });
+  }, []);
   // เพิ่มรูป
   function addImages(files: FileList | null) {
     if (!files) return;
@@ -43,13 +51,35 @@ export default function Comment() {
   // ส่งคำขอ
   function submit() {
     if (!detail.trim()) return;
-    const today = new Date().toLocaleDateString("th-TH", { day: "numeric", month: "short" });
-    setRequests((prev) => [
-      { id: Date.now(), title: `${topic} · ${detail.trim()}`, status: "รอดำเนินการ", date: today },
-      ...prev,
-    ]);
+
+    const today = new Date().toLocaleDateString("th-TH", {
+      day: "numeric",
+      month: "short",
+    });
+
+    addRequest({
+      id: Date.now(),
+      title: `${topic} · ${detail.trim()}`,
+      senderId: "manager_01",
+      senderName: "Manager สาขาสยาม",
+      senderRole: "Manager",
+      recipientRole: "Admin",
+      topic,
+      detail: detail.trim(),
+      status: "รอดำเนินการ",
+      forwardedTo: null,
+      attachments: images.map((url, index) => ({
+        id: index + 1,
+        fileName: `image-${index + 1}`,
+        fileUrl: url,
+      })),
+      messages: [],
+      date: today,
+    });
+
     setDetail("");
-    images.forEach((u) => URL.revokeObjectURL(u));
+
+    images.forEach((url) => URL.revokeObjectURL(url));
     setImages([]);
   }
 
@@ -150,7 +180,11 @@ export default function Comment() {
               <div key={r.id} className="space-y-2 py-4 last:pb-0">
                 <p className="text-sm font-medium">{r.title}</p>
                 <div className="flex items-center gap-2">
-                  <Badge color={statusColor[r.status]} size="sm">{r.status}</Badge>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs ${getStatusColor(r.status)}`}
+                  >
+                    {r.status}
+                  </span>
                   <span className="text-xs text-white/40">{r.date}</span>
                 </div>
 

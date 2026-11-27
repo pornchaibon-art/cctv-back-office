@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from "react";
 import { Input } from "@/components/tailgrids/core/input";
 import { Label } from "@/components/tailgrids/core/label";
 import { Button, buttonStyles } from "@/components/tailgrids/core/button";
@@ -11,7 +12,6 @@ import {
 import { ChevronDown, Search1 } from "@tailgrids/icons";
 import { Bell, Plus } from "lucide-react";
 import { Kanit } from "next/font/google";
-import { useEffect, useState } from "react";
 import {
   TableBody,
   TableCell,
@@ -20,7 +20,9 @@ import {
   TableRoot,
   TableRow
 } from "@/components/tailgrids/core/table";
-import { cctv, cctvType } from "@/data/cctv";
+import type { Camera, Branch } from "@/lib/cameras";
+import { BRANCH_LABEL } from "@/lib/cameras";
+import { getCameras, saveCameras } from "@/lib/cameraStorage";
 import { Pagination } from "@/components/tailgrids/core/pagination";
 import { Backdrop, OverlayWrapper } from "@/components/tailgrids/core/overlay";
 import {
@@ -52,15 +54,28 @@ export default function EquipmentPage() {
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState("all");
 
+  const [cameras, setCameras] = useState<Camera[]>([]);
+  const [ready, setReady] = useState(false);
 
-  const [cameras, setCameras] = useState<cctvType[]>(cctv);
+  useEffect(() => {
+    setCameras(getCameras());
+    setReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (ready) {
+      saveCameras(cameras);
+    }
+  }, [cameras, ready]);
+
+
   const filteredCameras = cameras.filter((camera) => {
     const matchStatus =
       activeFilter === "all" || camera.status === activeFilter;
     const matchSearch =
       camera.branch.toLowerCase().includes(search.toLowerCase()) ||
       camera.name.toLowerCase().includes(search.toLowerCase()) ||
-      camera.sn.toLowerCase().includes(search.toLowerCase());
+      camera.serialNumber.toLowerCase().includes(search.toLowerCase());
 
     return matchStatus && matchSearch;
 
@@ -95,40 +110,81 @@ export default function EquipmentPage() {
       count: cameras.filter((camera) => camera.status === "offline").length
     },
   ];
-  const newCam = () => {
-    const nameDom = document.getElementById('name') as HTMLInputElement;
-    const snDom = document.getElementById('sn') as HTMLInputElement;
-    const branchDom = document.getElementById('branch') as HTMLInputElement;
+  
+const newCam = () => {
+  const nameDom = document.getElementById('name') as HTMLInputElement;
+  const snDom = document.getElementById('sn') as HTMLInputElement;
 
-    const newId = Math.max(...cameras.map((camera) => camera.id), 0) + 1;
+  const nextNumber =
+    cameras.reduce((max, camera) => {
+      const number = Number(camera.id.split('-')[1]) || 0;
+      return Math.max(max, number);
+    }, 0) + 1;
 
-    const newCamera: cctvType = {
-      id: newId,
-      name: nameDom.value.trim(),
-      sn: snDom.value.trim(),
-      branch: branch.trim(),
-      status: 'online'
-    };
-
-    if (!newCamera.name || !newCamera.sn || !newCamera.branch) {
-      alert("กรุณากรอกข้อมูลให้ครบ");
-      return;
-    }
-    if (!/^[A-Z0-9]{15}$/.test(snDom.value.trim())) {
-      alert("Serial Number ใช้เฉพาะ A-Z และ 0-9");
-      return;
-    }
-    setCameras((prev) => [...prev, newCamera]);
-
-    setCurrentPage(Math.ceil((filteredCameras.length + 1) / itemPerPage));
-
-    nameDom.value = '';
-    snDom.value = '';
-    setBranch("");
+  const newCamera: Camera = {
+    id: `cam-${String(nextNumber).padStart(2, '0')}`,
+    name: nameDom.value.trim(),
+    serialNumber: snDom.value.trim(),
+    branch: branch as Branch,
+    snapshot: `/cameras/cam-${String(nextNumber).padStart(2, '0')}.jpg`,
+    status: 'offline',
   };
+
+  if (!newCamera.name || !newCamera.serialNumber || !newCamera.branch) {
+    alert("กรุณากรอกข้อมูลให้ครบ");
+    return;
+  }
+
+  if (!/^[A-Z0-9]{15}$/.test(newCamera.serialNumber)) {
+    alert("Serial Number ใช้เฉพาะ A-Z และ 0-9");
+    return;
+  }
+
+  if (cameras.some((camera) => camera.serialNumber === newCamera.serialNumber)) {
+    alert("Serial Number นี้มีอยู่แล้ว");
+    return;
+  }
+
+  setCameras((prev) => [...prev, newCamera]);
+
+  nameDom.value = '';
+  snDom.value = '';
+  setBranch('');
+};
+
+  const toggleStatus = (id: string) => {
+    setCameras((prev) =>
+      prev.map((camera) =>
+        camera.id === id
+          ? {
+            ...camera,
+            status: camera.status === "online" ? "offline" : "online",
+          }
+          : camera
+      )
+    );
+  };
+
   const [selected, setSelected] = useState("");
   const [branch, setBranch] = useState("");
 
+
+  useEffect(() => {
+  if (ready) {
+    saveCameras(cameras);
+  }
+}, [cameras, ready]);
+
+
+  useEffect(() => {
+    setCameras(getCameras());
+  }, []);
+
+  useEffect(() => {
+    if (cameras.length > 0) {
+      saveCameras(cameras);
+    }
+  }, [cameras]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -198,8 +254,9 @@ export default function EquipmentPage() {
                           <Label>ID</Label>
                           <Input
                             placeholder="LOCKED"
-                            className="w-full pointer-event-none bg-gray-900"
-                            value={cctv.reduce((p, t) => (t.id > p ? t.id : p), -1) + 1}
+                            className="w-full bg-gray-900"
+                            value={`cam-${String(cameras.length + 1).padStart(2, '0')}`}
+                            readOnly
                           />
                         </TextField>
 
@@ -237,20 +294,16 @@ export default function EquipmentPage() {
                               </SelectTrigger>
 
                               <SelectContent>
-                                <SelectItem id="สาขาสยาม" textValue="สาขาสยาม">
-                                  สาขาสยาม
-                                </SelectItem>
-
-                                <SelectItem id="สาขาอโศก" textValue="สาขาอโศก">
-                                  สาขาอโศก
-                                </SelectItem>
-
-                                <SelectItem id="สาขาลาดพร้าว" textValue="สาขาลาดพร้าว">
-                                  สาขาลาดพร้าว
-                                </SelectItem>
-
-                                <SelectItem id="สาขาบางนา" textValue="สาขาบางนา">
+                                <SelectItem id="bangna" textValue="สาขาบางนา">
                                   สาขาบางนา
+                                </SelectItem>
+
+                                <SelectItem id="silom" textValue="สาขาสีลม">
+                                  สาขาสีลม
+                                </SelectItem>
+
+                                <SelectItem id="rangsit" textValue="สาขารังสิต">
+                                  สาขารังสิต
                                 </SelectItem>
                               </SelectContent>
                             </Select>
@@ -287,18 +340,19 @@ export default function EquipmentPage() {
                     </TableCell>
 
                     <TableCell>
-                      {camera.branch}
+                      {BRANCH_LABEL[camera.branch]}
                     </TableCell>
 
                     <TableCell>
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs ${camera.status === "online"
+                      <button
+                        onClick={() => toggleStatus(camera.id)}
+                        className={`rounded-full px-3 py-1 text-xs transition hover:opacity-80 ${camera.status === "online"
                           ? "bg-green-500/20 text-green-400"
                           : "bg-red-500/20 text-red-400"
                           }`}
                       >
                         {camera.status === "online" ? "ออนไลน์" : "ออฟไลน์"}
-                      </span>
+                      </button>
                     </TableCell>
                   </TableRow>
                 ))}

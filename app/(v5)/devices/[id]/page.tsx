@@ -7,13 +7,15 @@ import { ArrowLeft, RotateCw, Trash2 } from 'lucide-react';
 import CameraCard from '@/components/CameraCard';
 import CameraModal from '@/components/CameraModal';
 import { PageHead, Toggle } from '@/components/ui';
-import { BRANCH_LABEL, CAMERAS } from '@/lib/cameras';
+import { BRANCH_LABEL } from '@/lib/cameras';
+import { useCameras } from '@/lib/useCameras';
 
 const QUALITY = ['HD', 'Full HD', '2K'];
 
 export default function DeviceDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const cam = CAMERAS.find((c) => c.id === id);
+  const cameras = useCameras();
+  const cam = cameras.find((c) => c.id === id);
 
   const [now, setNow] = useState('--:--:--');
   const [expanded, setExpanded] = useState(false);
@@ -48,8 +50,9 @@ export default function DeviceDetailPage() {
       </Link>
       <PageHead
         title={cam.name}
-        sub={`${BRANCH_LABEL[cam.branch]} · SN L2MFEYHHMDLZTK2`}
+        sub={`${BRANCH_LABEL[cam.branch]} · SN ${cam.serialNumber}`}
       />
+      
 
       <div className="grid-2">
         <div className="stack">

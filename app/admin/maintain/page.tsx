@@ -1,6 +1,6 @@
 "use client";
 
-import { cctv } from "@/data/cctv";
+import { useCameras } from "@/lib/useCameras";
 import { Bell } from "lucide-react";
 import { Kanit } from "next/font/google";
 import {
@@ -35,14 +35,36 @@ type IssueFilter = "all" | "SD Card" | "Cloud" | "No-Signal";
 
 
 export default function Page() {
+  const cameras = useCameras();
+
   const [activeFilter, setActiveFilter] = useState<IssueFilter>("all");
-  const problemCCTV = cctv.filter((camera) => {
+
+  // ดึงเฉพาะกล้องที่ Offline
+  const offlineCCTV = cameras.filter(
+    (camera) => camera.status === "offline"
+  );
+
+  // กรองตามประเภทปัญหา
+  const problemCCTV = offlineCCTV.filter((camera) => {
     if (activeFilter === "all") {
       return (camera.issue?.length ?? 0) > 0;
     }
 
     return camera.issue?.includes(activeFilter) ?? false;
   });
+
+  // จำนวนกล้องตามประเภทปัญหา (เฉพาะ Offline)
+  const countIssue = (issue: IssueFilter) => {
+    if (issue === "all") {
+      return offlineCCTV.filter(
+        (camera) => (camera.issue?.length ?? 0) > 0
+      ).length;
+    }
+
+    return offlineCCTV.filter(
+      (camera) => camera.issue?.includes(issue)
+    ).length;
+  };
 
   return (
     <div>
@@ -67,61 +89,32 @@ export default function Page() {
             <div className="mt-6 inline-flex items-center gap-1 rounded-full bg-[#100D35] p-1">
               <button
                 onClick={() => setActiveFilter("all")}
-                className={`rounded-full px-4 py-2 text-sm transition-all ${
-                  activeFilter === "all"
+                className={`rounded-full px-4 py-2 text-sm transition-all ${activeFilter === "all"
                     ? "bg-white text-[#211778]"
                     : "text-white hover:bg-[#25205C]"
-                }`}
+                  }`}
               >
-                ทั้งหมด ({cctv.filter((camera) => camera.issue?.length).length})
+                ทั้งหมด ({countIssue("all")})
               </button>
 
               <button
                 onClick={() => setActiveFilter("SD Card")}
-                className={`rounded-full px-4 py-2 text-sm transition-all ${
-                  activeFilter === "SD Card"
+                className={`rounded-full px-4 py-2 text-sm transition-all ${activeFilter === "SD Card"
                     ? "bg-white text-[#211778]"
                     : "text-white hover:bg-[#25205C]"
-                }`}
+                  }`}
               >
-                SD card (
-                {
-                  cctv.filter((camera) => camera.issue?.includes("SD Card"))
-                    .length
-                }
-                )
-              </button>
-
-              <button
-                onClick={() => setActiveFilter("Cloud")}
-                className={`rounded-full px-4 py-2 text-sm transition-all ${
-                  activeFilter === "Cloud"
-                    ? "bg-white text-[#211778]"
-                    : "text-white hover:bg-[#25205C]"
-                }`}
-              >
-                Cloud (
-                {
-                  cctv.filter((camera) => camera.issue?.includes("Cloud"))
-                    .length
-                }
-                )
+                SD card ({countIssue("SD Card")})
               </button>
 
               <button
                 onClick={() => setActiveFilter("No-Signal")}
-                className={`rounded-full px-4 py-2 text-sm transition-all ${
-                  activeFilter === "No-Signal"
+                className={`rounded-full px-4 py-2 text-sm transition-all ${activeFilter === "No-Signal"
                     ? "bg-white text-[#211778]"
                     : "text-white hover:bg-[#25205C]"
-                }`}
+                  }`}
               >
-                No-Signal (
-                {
-                  cctv.filter((camera) => camera.issue?.includes("No-Signal"))
-                    .length
-                }
-                )
+                No-Signal ({countIssue("No-Signal")})
               </button>
             </div>
           </div>
@@ -142,11 +135,10 @@ export default function Page() {
                     <TableCell>{camera.branch}</TableCell>
                     <TableCell>
                       <span
-                        className={`rounded-full px-3 py-1 text-xs ${
-                          camera.issue?.includes("No-Signal")
+                        className={`rounded-full px-3 py-1 text-xs ${camera.issue?.includes("No-Signal")
                             ? "bg-red-500/20 text-red-400"
                             : "bg-yellow-500/20 text-yellow-400"
-                        }`}
+                          }`}
                       >
                         {camera.issue
                           ?.map((issue) => {
@@ -188,7 +180,7 @@ export default function Page() {
 
                                 <TextField className="flex flex-col gap-1.5">
                                   <Input
-                                    placeholder={camera.sn}
+                                    value={camera.serialNumber}
                                     disabled
                                     className="w-full"
                                   />

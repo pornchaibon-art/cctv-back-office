@@ -1,107 +1,80 @@
-'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
-import Link from 'next/link';
-import CameraCard from '@/components/CameraCard';
-import CameraModal from '@/components/CameraModal';
-import {
-  BRANCH_LABEL,
-  BRANCH_TABS,
-  CAMERAS,
-  type BranchTab,
-  type Camera,
-} from '@/lib/cameras';
+"use client";
+
+import Link from "next/link";
+import Image from "next/image";
+import { BRANCH_LABEL } from "@/lib/cameras";
+import { useCameras } from "@/lib/useCameras";
 
 export default function LivePage() {
-  const [tab, setTab] = useState<BranchTab>('bangna');
-  const [query, setQuery] = useState('');
-  const [now, setNow] = useState('');
-  const [expanded, setExpanded] = useState<Camera | null>(null);
-
-  // นาฬิกาในการ์ดกล้อง อัปเดตทุกวินาที
-  // เริ่มเป็นค่าว่างก่อน เพื่อหลีกเลี่ยง hydration mismatch
-  useEffect(() => {
-    const tick = () =>
-      setNow(new Date().toLocaleTimeString('en-GB', { hour12: false }));
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  const cameras = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return CAMERAS.filter(
-      (c) =>
-        (tab === 'all' || c.branch === tab) &&
-        (q === '' || c.name.toLowerCase().includes(q)),
-    );
-  }, [tab, query]);
-
-  const scopeLabel = tab === 'all' ? 'ทุกสาขา' : BRANCH_LABEL[tab];
+  const cameras = useCameras();
 
   return (
-    <>
-        <header className="page-head">
-          <div>
-            <h1 className="page-title">ดูสด</h1>
-            <p className="page-sub">
-              {cameras.length} กล้อง · {scopeLabel}
-            </p>
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+
+      {cameras.map((camera) => (
+        <div
+          key={camera.id}
+          className="rounded-xl bg-[#100D35] p-4"
+        >
+          {/* ชื่อกล้องและสถานะ */}
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-white">
+              {camera.name}
+            </h3>
+
+            <span
+              className={
+                camera.status === "online"
+                  ? "text-green-400"
+                  : "text-red-400"
+              }
+            >
+              {camera.status === "online"
+                ? "ออนไลน์"
+                : "ออฟไลน์"}
+            </span>
           </div>
 
-          <div className="head-actions">
-            <Link href="/live/screens" className="btn">ชุดหน้าจอ & วนแสดง</Link>
-          <label className="search">
-            <Search size={16} />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="ค้นหากล้อง สาขา..."
-            />
-          </label>
-          </div>
-        </header>
+          {/* ภาพกล้อง */}
+          <div className="relative aspect-video overflow-hidden rounded-lg bg-black">
 
-        <div className="toolbar">
-          <div className="segmented" role="tablist">
-            {BRANCH_TABS.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                role="tab"
-                aria-selected={tab === t.id}
-                className={tab === t.id ? 'active' : ''}
-                onClick={() => setTab(t.id)}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <section className="grid">
-          {cameras.length === 0 ? (
-            <div className="empty">ไม่พบกล้องที่ค้นหา</div>
-          ) : (
-            cameras.map((cam) => (
-              <CameraCard
-                key={cam.id}
-                camera={cam}
-                time={now || '--:--:--'}
-                branchLabel={BRANCH_LABEL[cam.branch]}
-                onExpand={() => setExpanded(cam)}
+            {camera.status === "online" ? (
+              <Image
+                src={camera.snapshot}
+                alt={camera.name}
+                fill
+                className="object-cover"
               />
-            ))
-          )}
-        </section>
-      {expanded && (
-        <CameraModal
-          camera={expanded}
-          time={now || '--:--:--'}
-          onClose={() => setExpanded(null)}
-        />
+            ) : (
+              <div className="flex h-full items-center justify-center text-gray-400">
+                กล้องออฟไลน์
+              </div>
+            )}
+
+          </div>
+
+          {/* สาขา */}
+          <p className="mt-3 text-sm text-gray-400">
+            {BRANCH_LABEL[camera.branch]}
+          </p>
+
+          {/* รายละเอียด */}
+          <Link
+            href={`/devices/${camera.id}`}
+            className="mt-3 block text-center text-sm text-white"
+          >
+            รายละเอียด
+          </Link>
+        </div>
+      ))}
+
+      {cameras.length === 0 && (
+        <div className="col-span-full text-center text-gray-400 py-10">
+          ยังไม่มีกล้องในระบบ
+        </div>
       )}
-    </>
+
+    </div>
   );
 }
